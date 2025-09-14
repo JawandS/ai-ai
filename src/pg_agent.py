@@ -163,8 +163,6 @@ def message_builder(mtype, game_round, history, question=None):
                 round_report = round_report_maker(transformed_df)
             else:
                 round_report = ""
-            print(round_report)
-            print('*'*60)
         
         # Use the actual history structure for markdown display
         if not history.empty:

@@ -1,10 +1,9 @@
 """
-Experimental Economics Platform
-A modular web application for running experimental economics games.
+AI Economics Platform
+A simplified platform for running experimental economics games between AI agents.
 """
 
-from flask import Flask, render_template, request, jsonify, session
-from flask_socketio import SocketIO, emit, join_room, leave_room
+from flask import Flask, request, jsonify, render_template
 from flask_sqlalchemy import SQLAlchemy
 from dotenv import load_dotenv
 import os
@@ -22,7 +21,6 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize extensions
 db = SQLAlchemy(app)
-socketio = SocketIO(app, cors_allowed_origins="*")
 
 # Initialize models
 from models import init_models
@@ -33,61 +31,80 @@ from games.public_goods import PublicGoodsGame
 
 @app.route('/')
 def index():
-    """Main landing page"""
+    """Admin dashboard homepage"""
     return render_template('index.html')
 
-@app.route('/games')
-def games_list():
-    """List of available games"""
-    available_games = [
-        {
-            'id': 'public-goods',
-            'name': 'Public Goods Game',
-            'description': 'Classic experimental economics game studying cooperation and free-riding behavior',
-            'min_players': 4,
-            'max_players': 4,
-            'estimated_time': '15 minutes'
-        }
-    ]
-    return render_template('games_list.html', games=available_games)
-
-@app.route('/game/<game_type>')
-def game_lobby(game_type):
-    """Game lobby page"""
-    if game_type not in ['public-goods']:
-        return "Game type not found", 404
+@app.route('/admin')
+def admin_dashboard():
+    """Administrative dashboard for managing AI games"""
+    games = Game.query.order_by(Game.created_at.desc()).limit(20).all()
     
-    return render_template('game_lobby.html', game_type=game_type)
+    # Add some summary statistics
+    total_games = Game.query.count()
+    active_games = Game.query.filter_by(status='active').count()
+    completed_games = Game.query.filter_by(status='completed').count()
+    
+    stats = {
+        'total_games': total_games,
+        'active_games': active_games,
+        'completed_games': completed_games
+    }
+    
+    return render_template('admin_dashboard.html', games=games, stats=stats)
 
-@app.route('/game/<game_type>/play/<game_id>')
-def game_interface(game_type, game_id):
-    """Main game playing interface"""
+@app.route('/games/create')
+def create_game_page():
+    """Page for creating new AI games"""
+    return render_template('create_game.html')
+
+@app.route('/games/<game_id>')
+def game_details(game_id):
+    """View details of a specific game"""
     game = Game.query.filter_by(id=game_id).first()
     if not game:
         return "Game not found", 404
     
-    return render_template('game_interface.html', game=game, game_type=game_type)
+    players = Player.query.filter_by(game_id=game_id).all()
+    rounds = Round.query.filter_by(game_id=game_id).order_by(Round.round_number).all()
+    
+    return render_template('game_details.html', game=game, players=players, rounds=rounds)
+
+@app.route('/api/status')
+def api_status():
+    """Simple status page"""
+    return jsonify({
+        'status': 'AI Economics Platform',
+        'available_games': ['public-goods'],
+        'endpoints': [
+            'POST /api/games - Create a new game',
+            'GET /api/games/<game_id>/status - Get game status',
+            'POST /api/games/<game_id>/move - Make a move',
+            'POST /api/games/run - Run complete game with AI agents'
+        ]
+    })
 
 @app.route('/api/games', methods=['POST'])
 def create_game():
-    """API endpoint to create a new game"""
+    """API endpoint to create a new game with AI agents"""
     data = request.json
-    game_type = data.get('game_type')
+    game_type = data.get('game_type', 'public-goods')
     
     if game_type == 'public-goods':
         game = Game(
             id=str(uuid.uuid4()),
             game_type=game_type,
-            status='waiting',
+            status='active',
             created_at=datetime.utcnow(),
-            config={
-                'rounds': 15,
-                'tokens_per_round': 5,
-                'keep_value': 0.20,
-                'invest_value': 0.10,
-                'social_value': 0.10
-            }
+            started_at=datetime.utcnow(),
+            max_rounds=15
         )
+        game.set_config({
+            'rounds': 15,
+            'tokens_per_round': 5,
+            'keep_value': 0.20,
+            'invest_value': 0.10,
+            'social_value': 0.10
+        })
         db.session.add(game)
         db.session.commit()
         
@@ -95,15 +112,16 @@ def create_game():
     
     return jsonify({'error': 'Invalid game type'}), 400
 
-@app.route('/api/games/<game_id>/join', methods=['POST'])
-def join_game(game_id):
-    """API endpoint to join a game"""
+@app.route('/api/games/<game_id>/add_ai_player', methods=['POST'])
+def add_ai_player(game_id):
+    """API endpoint to add an AI player to a game"""
     game = Game.query.filter_by(id=game_id).first()
     if not game:
         return jsonify({'error': 'Game not found'}), 404
     
     data = request.json
-    player_name = data.get('player_name', f'Player_{uuid.uuid4().hex[:8]}')
+    ai_model = data.get('ai_model', 'gpt-4o-mini')
+    player_name = data.get('player_name', f'AI_{uuid.uuid4().hex[:8]}')
     
     # Check if game is full
     current_players = Player.query.filter_by(game_id=game_id).count()
@@ -114,7 +132,8 @@ def join_game(game_id):
         id=str(uuid.uuid4()),
         game_id=game_id,
         name=player_name,
-        is_ai=data.get('is_ai', False),
+        ai_model=ai_model,
+        position=current_players,
         joined_at=datetime.utcnow()
     )
     db.session.add(player)
@@ -170,36 +189,62 @@ def game_status(game_id):
         'game_id': game.id,
         'status': game.status,
         'current_round': game.current_round,
-        'players': [{'id': p.id, 'name': p.name, 'is_ai': p.is_ai} for p in players],
+        'players': [{'id': p.id, 'name': p.name, 'ai_model': p.ai_model} for p in players],
         'rounds': [{'round': r.round_number, 'completed': r.completed_at is not None} for r in rounds]
     })
 
-@app.route('/admin')
-def admin_dashboard():
-    """Administrative dashboard"""
-    games = Game.query.order_by(Game.created_at.desc()).all()
-    return render_template('admin_dashboard.html', games=games)
-
-# WebSocket events for real-time updates
-@socketio.on('join_game_room')
-def on_join(data):
-    """Handle player joining a game room"""
-    game_id = data['game_id']
-    join_room(game_id)
-    emit('status', {'msg': f'Player joined game {game_id}'}, room=game_id)
-
-@socketio.on('leave_game_room')
-def on_leave(data):
-    """Handle player leaving a game room"""
-    game_id = data['game_id']
-    leave_room(game_id)
-    emit('status', {'msg': f'Player left game {game_id}'}, room=game_id)
-
-@socketio.on('game_update')
-def handle_game_update(data):
-    """Broadcast game updates to all players in the room"""
-    game_id = data['game_id']
-    emit('game_state_update', data, room=game_id)
+@app.route('/api/games/run', methods=['POST'])
+def run_ai_game():
+    """Run a complete game with AI agents"""
+    data = request.json
+    game_type = data.get('game_type', 'public-goods')
+    ai_models = data.get('ai_models', ['gpt-4o-mini'] * 4)
+    
+    if len(ai_models) != 4:
+        return jsonify({'error': 'Exactly 4 AI models required for public goods game'}), 400
+    
+    # Create game
+    game = Game(
+        id=str(uuid.uuid4()),
+        game_type=game_type,
+        status='active',
+        created_at=datetime.utcnow(),
+        started_at=datetime.utcnow(),
+        config={
+            'rounds': 15,
+            'tokens_per_round': 5,
+            'keep_value': 0.20,
+            'invest_value': 0.10,
+            'social_value': 0.10
+        }
+    )
+    db.session.add(game)
+    
+    # Add AI players
+    for i, ai_model in enumerate(ai_models):
+        player = Player(
+            id=str(uuid.uuid4()),
+            game_id=game.id,
+            name=f'AI_Player_{i+1}',
+            ai_model=ai_model,
+            position=i,
+            joined_at=datetime.utcnow()
+        )
+        db.session.add(player)
+    
+    db.session.commit()
+    
+    # Run the game
+    if game_type == 'public-goods':
+        game_engine = PublicGoodsGame(game, db)
+        result = game_engine.run_full_game()
+        return jsonify({
+            'game_id': game.id,
+            'status': 'completed',
+            'results': result
+        })
+    
+    return jsonify({'error': 'Invalid game type'}), 400
 
 if __name__ == '__main__':
     with app.app_context():
@@ -207,4 +252,4 @@ if __name__ == '__main__':
     
     # Run in development mode
     debug_mode = os.getenv('DEV_MODE', 'false').lower() == 'true'
-    socketio.run(app, debug=debug_mode, host='0.0.0.0', port=5000)
+    app.run(debug=debug_mode, host='0.0.0.0', port=5000)

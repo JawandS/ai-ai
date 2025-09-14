@@ -38,14 +38,13 @@ def init_models(db):
             self.config = json.dumps(config_dict)
 
     class Player(db.Model):
-        """Players in games (both human and AI)"""
+        """AI players in games"""
         __tablename__ = 'players'
         
         id = db.Column(db.String(36), primary_key=True)
         game_id = db.Column(db.String(36), db.ForeignKey('games.id'), nullable=False)
         name = db.Column(db.String(100), nullable=False)
-        is_ai = db.Column(db.Boolean, default=False)
-        ai_model = db.Column(db.String(50))  # Model name for AI players
+        ai_model = db.Column(db.String(50), nullable=False)  # Required AI model name
         position = db.Column(db.Integer)  # Player position in game (0-3 for 4-player games)
         total_earnings = db.Column(db.Float, default=0.0)
         joined_at = db.Column(db.DateTime, default=datetime.utcnow)

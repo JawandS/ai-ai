@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+
+{% block title %}Create Game - AI Economics Platform{% endblock %}
+
+{% block content %}
+<div class="px-4">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">
+            <i class="fas fa-plus-circle text-blue-600 mr-3"></i>
+            Create New AI Game
+        </h1>
+        <p class="text-gray-600">Configure and launch a new experimental economics game between AI agents</p>
+    </div>
+
+    <div class="max-w-4xl mx-auto">
+        <!-- Game Configuration Form -->
+        <div class="bg-white rounded-lg shadow-md p-8">
+            <form id="createGameForm">
+                <!-- Game Type Selection -->
+                <div class="mb-8">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Game Type</h3>
+                    <div class="grid grid-cols-1 gap-4">
+                        <label class="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-blue-300 transition-colors">
+                            <input type="radio" name="game_type" value="public-goods" class="mr-4" checked>
+                            <div class="flex-1">
+                                <div class="flex items-center mb-2">
+                                    <i class="fas fa-handshake text-green-500 mr-2"></i>
+                                    <span class="font-semibold">Public Goods Game</span>
+                                </div>
+                                <p class="text-sm text-gray-600">
+                                    Classic cooperation experiment where agents decide how many tokens to invest in a common pool
+                                </p>
+                                <div class="mt-2 text-xs text-gray-500">
+                                    <span class="inline-block mr-4">👥 4 Players</span>
+                                    <span class="inline-block mr-4">🔄 15 Rounds</span>
+                                    <span class="inline-block">⏱️ ~1 minute</span>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- AI Model Configuration -->
+                <div class="mb-8">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">AI Player Configuration</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {% for i in range(4) %}
+                        <div class="border border-gray-200 rounded-lg p-4">
+                            <h4 class="font-medium text-gray-900 mb-3">
+                                <i class="fas fa-robot text-blue-500 mr-2"></i>
+                                AI Player {{ i + 1 }}
+                            </h4>
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                                    <input type="text" name="player_{{ i }}_name" value="AI_Player_{{ i + 1 }}" 
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">AI Model</label>
+                                    <select name="player_{{ i }}_model" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                        <option value="gpt-4o-mini" selected>GPT-4o Mini</option>
+                                        <option value="gpt-4o">GPT-4o</option>
+                                        <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                                        <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Game Settings -->
+                <div class="mb-8">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Game Settings</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Number of Rounds</label>
+                            <input type="number" name="rounds" value="15" min="1" max="50" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Tokens per Round</label>
+                            <input type="number" name="tokens_per_round" value="5" min="1" max="20" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Keep Value ($)</label>
+                            <input type="number" name="keep_value" value="0.20" step="0.01" min="0" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Invest Value ($)</label>
+                            <input type="number" name="invest_value" value="0.10" step="0.01" min="0" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex justify-between">
+                    <a href="/admin" class="bg-gray-500 text-white px-6 py-2 rounded-md hover:bg-gray-600">
+                        <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+                    </a>
+                    <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700">
+                        <i class="fas fa-play mr-2"></i>Start Game
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Game Running Modal -->
+        <div id="gameRunningModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+            <div class="flex items-center justify-center min-h-screen px-4">
+                <div class="bg-white rounded-lg p-8 max-w-md w-full">
+                    <div class="text-center">
+                        <i class="fas fa-cog fa-spin text-4xl text-blue-600 mb-4"></i>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Running Game...</h3>
+                        <p class="text-gray-600 mb-4">AI agents are playing the game. This may take a moment.</p>
+                        <div class="bg-gray-200 rounded-full h-2 mb-4">
+                            <div id="progressBar" class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                        <p id="progressText" class="text-sm text-gray-500">Initializing...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('createGameForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const ai_models = [];
+    
+    // Collect AI models
+    for (let i = 0; i < 4; i++) {
+        ai_models.push(formData.get(`player_${i}_model`));
+    }
+    
+    const gameData = {
+        game_type: formData.get('game_type'),
+        ai_models: ai_models,
+        config: {
+            rounds: parseInt(formData.get('rounds')),
+            tokens_per_round: parseInt(formData.get('tokens_per_round')),
+            keep_value: parseFloat(formData.get('keep_value')),
+            invest_value: parseFloat(formData.get('invest_value')),
+            social_value: 0.10 // Fixed for public goods game
+        }
+    };
+    
+    // Show loading modal
+    document.getElementById('gameRunningModal').classList.remove('hidden');
+    
+    // Simulate progress
+    let progress = 0;
+    const progressInterval = setInterval(() => {
+        progress += Math.random() * 10;
+        if (progress > 95) progress = 95;
+        document.getElementById('progressBar').style.width = progress + '%';
+        
+        if (progress < 30) {
+            document.getElementById('progressText').textContent = 'Creating game and AI players...';
+        } else if (progress < 60) {
+            document.getElementById('progressText').textContent = 'AI agents are making decisions...';
+        } else if (progress < 90) {
+            document.getElementById('progressText').textContent = 'Calculating results...';
+        }
+    }, 500);
+    
+    try {
+        const response = await fetch('/api/games/run', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(gameData)
+        });
+        
+        const result = await response.json();
+        
+        clearInterval(progressInterval);
+        document.getElementById('progressBar').style.width = '100%';
+        document.getElementById('progressText').textContent = 'Complete!';
+        
+        setTimeout(() => {
+            if (response.ok) {
+                window.location.href = `/games/${result.game_id}`;
+            } else {
+                alert('Error creating game: ' + result.error);
+                document.getElementById('gameRunningModal').classList.add('hidden');
+            }
+        }, 1000);
+        
+    } catch (error) {
+        clearInterval(progressInterval);
+        alert('Error creating game: ' + error.message);
+        document.getElementById('gameRunningModal').classList.add('hidden');
+    }
+});
+</script>
+{% endblock %}

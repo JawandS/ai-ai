@@ -1,196 +1,155 @@
 {% extends "base.html" %}
 
-{% block title %}Admin Dashboard{% endblock %}
+{% block title %}Admin Dashboard - AI Economics Platform{% endblock %}
 
 {% block content %}
-<div class="px-4 py-6">
+<div class="px-4" data-auto-refresh>
     <!-- Header -->
     <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
-        <p class="text-gray-600">Monitor games, view results, and manage the platform</p>
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">
+            <i class="fas fa-chart-line text-blue-600 mr-3"></i>
+            Game Dashboard
+        </h1>
+        <p class="text-gray-600">Monitor and manage AI economics experiments</p>
     </div>
 
-    <!-- Stats Overview -->
-    <div class="grid md:grid-cols-4 gap-6 mb-8">
-        <div class="bg-white p-6 rounded-xl card-shadow">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm text-gray-600">Total Games</p>
-                    <p class="text-2xl font-bold text-blue-600">{{ games|length }}</p>
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-blue-100">
+                    <i class="fas fa-gamepad text-blue-600 text-xl"></i>
                 </div>
-                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-                    </svg>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Total Games</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ stats.total_games }}</p>
                 </div>
             </div>
         </div>
-        
-        <div class="bg-white p-6 rounded-xl card-shadow">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm text-gray-600">Active Games</p>
-                    <p class="text-2xl font-bold text-green-600">
-                        {{ games|selectattr("status", "equalto", "active")|list|length }}
-                    </p>
+
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-green-100">
+                    <i class="fas fa-play text-green-600 text-xl"></i>
                 </div>
-                <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                    </svg>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Active Games</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ stats.active_games }}</p>
                 </div>
             </div>
         </div>
-        
-        <div class="bg-white p-6 rounded-xl card-shadow">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm text-gray-600">Completed Games</p>
-                    <p class="text-2xl font-bold text-purple-600">
-                        {{ games|selectattr("status", "equalto", "completed")|list|length }}
-                    </p>
+
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-purple-100">
+                    <i class="fas fa-check-circle text-purple-600 text-xl"></i>
                 </div>
-                <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                </div>
-            </div>
-        </div>
-        
-        <div class="bg-white p-6 rounded-xl card-shadow">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm text-gray-600">Waiting Games</p>
-                    <p class="text-2xl font-bold text-orange-600">
-                        {{ games|selectattr("status", "equalto", "waiting")|list|length }}
-                    </p>
-                </div>
-                <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                    <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Completed Games</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ stats.completed_games }}</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Recent Games Table -->
-    <div class="bg-white rounded-xl card-shadow overflow-hidden">
-        <div class="p-6 border-b border-gray-200">
-            <h2 class="text-xl font-semibold">Recent Games</h2>
+    <!-- Quick Actions -->
+    <div class="mb-8">
+        <div class="flex flex-wrap gap-4">
+            <a href="/games/create" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 flex items-center">
+                <i class="fas fa-plus mr-2"></i>Create New Game
+            </a>
+            <button onclick="location.reload()" class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 flex items-center">
+                <i class="fas fa-sync-alt mr-2"></i>Refresh
+            </button>
+        </div>
+    </div>
+
+    <!-- Games Table -->
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900">Recent Games</h2>
         </div>
         
+        {% if games %}
         <div class="overflow-x-auto">
-            <table class="w-full">
+            <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Game ID</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Players</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Round</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Game ID
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Type
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Status
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Round
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Created
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions
+                        </th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
                     {% for game in games %}
                     <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">
                             {{ game.id[:8] }}...
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                            {{ game.game_type|title }}
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <i class="fas fa-handshake text-green-500 mr-1"></i>
+                            {{ game.game_type.replace('-', ' ').title() }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            {% if game.status == 'active' %}
-                                <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">Active</span>
-                            {% elif game.status == 'waiting' %}
-                                <span class="px-2 py-1 text-xs font-medium bg-orange-100 text-orange-800 rounded-full">Waiting</span>
+                            {% if game.status == 'waiting' %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                    <i class="fas fa-clock mr-1"></i>Waiting
+                                </span>
+                            {% elif game.status == 'active' %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    <i class="fas fa-play mr-1"></i>Active
+                                </span>
                             {% elif game.status == 'completed' %}
-                                <span class="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">Completed</span>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                    <i class="fas fa-check mr-1"></i>Completed
+                                </span>
                             {% else %}
-                                <span class="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">{{ game.status|title }}</span>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                    {{ game.status }}
+                                </span>
                             {% endif %}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                            {{ game.players|length }}/4
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ game.current_round }}/{{ game.max_rounds }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                            {{ game.current_round + 1 }}/{{ game.max_rounds }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {{ game.created_at.strftime('%Y-%m-%d %H:%M') }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <a href="/admin/game/{{ game.id }}" class="text-blue-600 hover:text-blue-900 mr-3">View</a>
-                            {% if game.status == 'completed' %}
-                                <a href="/admin/game/{{ game.id }}/results" class="text-green-600 hover:text-green-900">Results</a>
-                            {% endif %}
+                            <a href="/games/{{ game.id }}" class="text-blue-600 hover:text-blue-900">
+                                <i class="fas fa-eye mr-1"></i>View
+                            </a>
                         </td>
                     </tr>
                     {% endfor %}
-                    
-                    {% if not games %}
-                    <tr>
-                        <td colspan="7" class="px-6 py-8 text-center text-gray-500">
-                            No games found. Start by creating a new game!
-                        </td>
-                    </tr>
-                    {% endif %}
                 </tbody>
             </table>
         </div>
-    </div>
-
-    <!-- Quick Actions -->
-    <div class="mt-8 grid md:grid-cols-3 gap-6">
-        <div class="bg-white p-6 rounded-xl card-shadow">
-            <h3 class="text-lg font-semibold mb-3">Quick Actions</h3>
-            <div class="space-y-3">
-                <a href="/games" class="block w-full bg-blue-500 hover:bg-blue-600 text-white text-center py-2 px-4 rounded-lg transition duration-300">
-                    Create New Game
-                </a>
-                <button class="block w-full bg-gray-500 hover:bg-gray-600 text-white text-center py-2 px-4 rounded-lg transition duration-300">
-                    Export Data
-                </button>
-            </div>
+        {% else %}
+        <div class="px-6 py-12 text-center">
+            <i class="fas fa-gamepad text-4xl text-gray-300 mb-4"></i>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No games yet</h3>
+            <p class="text-gray-500 mb-4">Create your first AI economics experiment</p>
+            <a href="/games/create" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                <i class="fas fa-plus mr-2"></i>Create Game
+            </a>
         </div>
-        
-        <div class="bg-white p-6 rounded-xl card-shadow">
-            <h3 class="text-lg font-semibold mb-3">System Status</h3>
-            <div class="space-y-2 text-sm">
-                <div class="flex justify-between">
-                    <span class="text-gray-600">Platform Status:</span>
-                    <span class="text-green-600 font-medium">Online</span>
-                </div>
-                <div class="flex justify-between">
-                    <span class="text-gray-600">Dev Mode:</span>
-                    <span class="text-orange-600 font-medium">{{ 'Enabled' if config.get('DEV_MODE') else 'Disabled' }}</span>
-                </div>
-                <div class="flex justify-between">
-                    <span class="text-gray-600">Database:</span>
-                    <span class="text-green-600 font-medium">Connected</span>
-                </div>
-            </div>
-        </div>
-        
-        <div class="bg-white p-6 rounded-xl card-shadow">
-            <h3 class="text-lg font-semibold mb-3">Recent Activity</h3>
-            <div class="space-y-2 text-sm text-gray-600">
-                {% if games %}
-                    {% for game in games[:3] %}
-                    <div class="border-l-2 border-blue-300 pl-3">
-                        Game {{ game.id[:8] }} {{ game.status }}
-                        <div class="text-xs text-gray-400">{{ game.created_at.strftime('%H:%M') }}</div>
-                    </div>
-                    {% endfor %}
-                {% else %}
-                    <p class="text-gray-400">No recent activity</p>
-                {% endif %}
-            </div>
-        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

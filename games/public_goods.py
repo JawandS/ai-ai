@@ -253,7 +253,7 @@ class PublicGoodsGame(BaseGameEngine):
         if not round_obj:
             return
         
-        ai_players = Player.query.filter_by(game_id=self.game.id, is_ai=True).all()
+        ai_players = Player.query.filter_by(game_id=self.game.id).all()  # All players are AI now
         
         for player in ai_players:
             # Check if AI player already made a move
@@ -279,3 +279,89 @@ class PublicGoodsGame(BaseGameEngine):
                 self.db.session.add(move)
         
         self.db.session.commit()
+    
+    def run_full_game(self):
+        """Run a complete game with all AI players"""
+        # Import here to avoid circular imports
+        from app import Player, Round, PlayerMove, GameResult
+        
+        # Get all players (all are AI)
+        players = Player.query.filter_by(game_id=self.game.id).all()
+        if len(players) != 4:
+            return {'error': 'Game requires exactly 4 AI players'}
+        
+        game_results = []
+        
+        # Run all rounds
+        for round_num in range(self.max_rounds):
+            self.game.current_round = round_num
+            
+            # Create round
+            current_round = Round(
+                id=str(uuid.uuid4()),
+                game_id=self.game.id,
+                round_number=round_num
+            )
+            self.db.session.add(current_round)
+            self.db.session.commit()
+            
+            # Generate moves for all AI players
+            round_moves = []
+            for player in players:
+                ai_investment = self.generate_ai_move(player, round_num, game_results)
+                
+                move = PlayerMove(
+                    id=str(uuid.uuid4()),
+                    round_id=current_round.id,
+                    player_id=player.id,
+                    move_data=json.dumps({
+                        'tokens_invested': ai_investment,
+                        'tokens_kept': self.tokens_per_round - ai_investment
+                    })
+                )
+                self.db.session.add(move)
+                round_moves.append({
+                    'player_id': player.id,
+                    'player_name': player.name,
+                    'tokens_invested': ai_investment,
+                    'tokens_kept': self.tokens_per_round - ai_investment
+                })
+            
+            self.db.session.commit()
+            
+            # Calculate round results
+            self.calculate_round_results(current_round.id)
+            
+            # Store round results for history
+            total_invested = sum(move['tokens_invested'] for move in round_moves)
+            round_result = {
+                'round_number': round_num,
+                'moves': round_moves,
+                'total_invested': total_invested,
+                'average_investment': total_invested / len(players)
+            }
+            game_results.append(round_result)
+        
+        # Finalize game
+        self.game.status = 'completed'
+        self.game.completed_at = datetime.utcnow()
+        self.finalize_game()
+        
+        # Get final results
+        final_results = []
+        updated_players = Player.query.filter_by(game_id=self.game.id).all()
+        for player in updated_players:
+            final_results.append({
+                'player_id': player.id,
+                'player_name': player.name,
+                'ai_model': player.ai_model,
+                'total_earnings': player.total_earnings,
+                'position': player.position
+            })
+        
+        return {
+            'game_id': self.game.id,
+            'total_rounds': self.max_rounds,
+            'game_history': game_results,
+            'final_results': final_results
+        }

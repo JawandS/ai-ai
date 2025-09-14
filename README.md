@@ -1,26 +1,25 @@
-# Experimental Economics Platform
+# AI Economics Platform
 
-A modern, modular web application for running experimental economics games with both AI agents and human participants.
+A simplified platform for running experimental economics games exclusively between AI agents.
 
 ## Features
 
-- 🎮 **Modular Game Architecture**: Easily extensible framework for adding new experimental economics games
-- 🤖 **AI Agent Integration**: Support for both human players and AI agents using OpenAI's GPT models
-- 🌐 **Real-time Web Interface**: Modern, responsive UI built with Flask and Tailwind CSS
-- 📊 **Live Game Monitoring**: Real-time updates using WebSockets
-- 📈 **Comprehensive Analytics**: Detailed results and statistics for each game
-- 🔧 **Development Mode**: Test games with simulated AI responses without API calls
-- 🎯 **Public Goods Game**: Fully implemented classic cooperation experiment
+- 🤖 **AI-Only Games**: Designed specifically for AI agent vs AI agent experiments
+- � **Public Goods Game**: Classic cooperation experiment implementation
+- � **Comprehensive Analytics**: Detailed results and statistics for each game
+- 🔧 **Development Mode**: Test games with simulated responses without API calls
+- 🚀 **Easy Automation**: Command-line tools for running multiple games
+- 📈 **REST API**: Simple API for programmatic game execution
 
 ## Currently Supported Games
 
 ### Public Goods Game
-- **Players**: 4 (mix of humans and AI)
+- **Players**: 4 AI agents
 - **Rounds**: 15
-- **Duration**: ~15 minutes
-- **Concept**: Study cooperation and free-riding behavior in group settings
+- **Duration**: Instant (automated)
+- **Concept**: Study cooperation and free-riding behavior between AI models
 
-Players receive tokens each round and decide how many to keep (earning $0.20 each) versus invest in a common pool (earning $0.10 each, plus $0.10 for each token invested by others).
+AI agents receive tokens each round and decide how many to keep (earning $0.20 each) versus invest in a common pool (earning $0.10 each, plus $0.10 for each token invested by others).
 
 ## Quick Start
 
@@ -46,38 +45,73 @@ Players receive tokens each round and decide how many to keep (earning $0.20 eac
    SECRET_KEY=your-secret-key
    ```
 
-3. **Run the application**:
+3. **Run the platform**:
    ```bash
    source venv/bin/activate  # If not already activated
    python app.py
    ```
 
 4. **Access the platform**:
-   - Open http://localhost:5000
-   - Navigate to "Games" to start playing
-   - Visit "Admin" for monitoring and results
+   - Open http://localhost:5000 for the admin dashboard
+   - Create and monitor AI games through the web interface
+   - Use the command-line tool for automated experiments
+
+## Usage
+
+### Web Interface
+The platform provides a clean web interface for managing AI games:
+
+- **Dashboard**: Monitor active and completed games
+- **Create Games**: Configure AI players and game settings
+- **Game Details**: View detailed results and round-by-round data
+- **Export Results**: Download game data in JSON format
+
+### Command Line Interface
+For automated experiments and batch processing:
+
+```bash
+# Run a single game with default settings
+python run_ai_game.py
+
+# Run with specific AI models
+python run_ai_game.py --models gpt-4o gpt-4o-mini gpt-3.5-turbo gpt-4o
+
+# Run multiple games
+python run_ai_game.py --rounds 5
+
+# Custom API endpoint
+python run_ai_game.py --url http://your-server:5000
+```
+
+### API Endpoints
+
+- `GET /` - Admin dashboard homepage
+- `GET /admin` - Games dashboard with statistics
+- `GET /games/create` - Game creation interface  
+- `GET /games/<game_id>` - View specific game details
+- `POST /api/games/run` - Run complete AI game programmatically
+- `GET /api/games/<game_id>/status` - Get game status via API
 
 ## Project Structure
 
 ```
-├── app.py                 # Main Flask application
-├── models.py             # Database models
+├── app.py                 # Main Flask application with admin routes
+├── models.py             # Database models (AI players only)
 ├── requirements.txt      # Python dependencies
 ├── setup.sh             # Setup script
+├── run_ai_game.py       # Command-line game runner
 ├── .env                 # Environment configuration
 ├── src/
-│   └── pg_agent.py      # Original agent logic (adapted)
+│   └── pg_agent.py      # AI agent logic and OpenAI integration
 ├── games/
 │   ├── __init__.py      # Base game engine
 │   └── public_goods.py  # Public Goods Game implementation
-├── templates/
-│   ├── base.html        # Base template
-│   ├── index.html       # Homepage
-│   ├── games_list.html  # Available games
-│   ├── game_lobby.html  # Game lobby
-│   ├── game_interface.html # Game playing interface
-│   └── admin_dashboard.html # Admin panel
-└── static/              # Static assets
+└── templates/
+    ├── base.html        # Base template with navigation
+    ├── index.html       # Admin homepage
+    ├── admin_dashboard.html # Games monitoring dashboard
+    ├── create_game.html     # Game creation interface
+    └── game_details.html    # Game results viewer
 ```
 
 ## Development Mode
