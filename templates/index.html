@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Economics Lab - Home{% endblock %}
+
+{% block content %}
+<div class="px-4 py-6">
+    <!-- Hero Section -->
+    <div class="gradient-bg rounded-2xl p-8 text-white mb-8">
+        <div class="max-w-4xl mx-auto text-center">
+            <h1 class="text-4xl md:text-6xl font-bold mb-4">
+                Experimental Economics Platform
+            </h1>
+            <p class="text-xl md:text-2xl mb-8 opacity-90">
+                A modern platform for running behavioral economics experiments with AI and human participants
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="/games" class="bg-white text-blue-600 hover:bg-gray-100 font-semibold py-3 px-8 rounded-lg transition duration-300 transform hover:scale-105">
+                    Start Playing
+                </a>
+                <a href="/admin" class="border-2 border-white text-white hover:bg-white hover:text-blue-600 font-semibold py-3 px-8 rounded-lg transition duration-300">
+                    Admin Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <div class="grid md:grid-cols-3 gap-8 mb-12">
+        <div class="bg-white p-6 rounded-xl card-shadow">
+            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                </svg>
+            </div>
+            <h3 class="text-xl font-semibold mb-2">Multi-Agent Games</h3>
+            <p class="text-gray-600">Run experiments with both AI agents and human participants in controlled environments.</p>
+        </div>
+        
+        <div class="bg-white p-6 rounded-xl card-shadow">
+            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                </svg>
+            </div>
+            <h3 class="text-xl font-semibold mb-2">Real-time Analytics</h3>
+            <p class="text-gray-600">Monitor participant behavior and game dynamics with live data visualization.</p>
+        </div>
+        
+        <div class="bg-white p-6 rounded-xl card-shadow">
+            <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
+                </svg>
+            </div>
+            <h3 class="text-xl font-semibold mb-2">Modular Design</h3>
+            <p class="text-gray-600">Easily extensible platform supporting various experimental economics games.</p>
+        </div>
+    </div>
+
+    <!-- Current Games Section -->
+    <div class="bg-white rounded-xl card-shadow p-8">
+        <h2 class="text-3xl font-bold text-center mb-8">Available Games</h2>
+        
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Public Goods Game -->
+            <div class="border border-gray-200 rounded-lg p-6 hover:shadow-lg transition duration-300">
+                <div class="flex items-center mb-4">
+                    <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center text-white font-bold mr-3">
+                        PG
+                    </div>
+                    <h3 class="text-xl font-semibold">Public Goods Game</h3>
+                </div>
+                <p class="text-gray-600 mb-4">Classic cooperation experiment studying free-riding behavior in group settings.</p>
+                <div class="text-sm text-gray-500 mb-4">
+                    <span class="inline-block mr-4">👥 4 players</span>
+                    <span class="inline-block">⏱️ ~15 minutes</span>
+                </div>
+                <a href="/game/public-goods" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-300 block text-center">
+                    Play Now
+                </a>
+            </div>
+            
+            <!-- Placeholder for future games -->
+            <div class="border border-gray-200 rounded-lg p-6 opacity-50">
+                <div class="flex items-center mb-4">
+                    <div class="w-10 h-10 bg-gray-400 rounded-lg flex items-center justify-center text-white font-bold mr-3">
+                        UG
+                    </div>
+                    <h3 class="text-xl font-semibold">Ultimatum Game</h3>
+                </div>
+                <p class="text-gray-600 mb-4">Coming soon - Study fairness and negotiation behavior.</p>
+                <div class="text-sm text-gray-500 mb-4">
+                    <span class="inline-block mr-4">👥 2 players</span>
+                    <span class="inline-block">⏱️ ~10 minutes</span>
+                </div>
+                <button disabled class="w-full bg-gray-300 text-gray-500 font-semibold py-2 px-4 rounded-lg cursor-not-allowed">
+                    Coming Soon
+                </button>
+            </div>
+            
+            <div class="border border-gray-200 rounded-lg p-6 opacity-50">
+                <div class="flex items-center mb-4">
+                    <div class="w-10 h-10 bg-gray-400 rounded-lg flex items-center justify-center text-white font-bold mr-3">
+                        DG
+                    </div>
+                    <h3 class="text-xl font-semibold">Dictator Game</h3>
+                </div>
+                <p class="text-gray-600 mb-4">Coming soon - Explore altruistic behavior and giving.</p>
+                <div class="text-sm text-gray-500 mb-4">
+                    <span class="inline-block mr-4">👥 2 players</span>
+                    <span class="inline-block">⏱️ ~5 minutes</span>
+                </div>
+                <button disabled class="w-full bg-gray-300 text-gray-500 font-semibold py-2 px-4 rounded-lg cursor-not-allowed">
+                    Coming Soon
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

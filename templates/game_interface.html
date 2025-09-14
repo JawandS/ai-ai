@@ -1,0 +1,328 @@
+{% extends "base.html" %}
+
+{% block title %}Public Goods Game - Playing{% endblock %}
+
+{% block content %}
+<div class="px-4 py-6" x-data="gameInterface()">
+    <!-- Game Header -->
+    <div class="bg-white rounded-xl card-shadow p-6 mb-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Public Goods Game</h1>
+                <p class="text-gray-600">Game ID: <span x-text="gameId"></span></p>
+            </div>
+            <div class="text-right">
+                <div class="text-sm text-gray-600">Round</div>
+                <div class="text-2xl font-bold text-blue-600">
+                    <span x-text="currentRound"></span> / <span x-text="maxRounds"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Status -->
+    <div class="bg-white rounded-xl card-shadow p-6 mb-6">
+        <h2 class="text-xl font-semibold mb-4">Game Status</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <template x-for="player in players" :key="player.id">
+                <div class="text-center p-3 bg-gray-50 rounded-lg">
+                    <div class="text-sm font-medium" x-text="player.name"></div>
+                    <div class="text-xs text-gray-500">
+                        <span x-show="player.is_ai" class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full">AI</span>
+                        <span x-show="!player.is_ai" class="bg-green-100 text-green-800 px-2 py-1 rounded-full">Human</span>
+                    </div>
+                    <div class="text-lg font-bold text-green-600 mt-1">
+                        $<span x-text="(player.total_earnings || 0).toFixed(2)"></span>
+                    </div>
+                    <div class="text-xs text-gray-500">
+                        <span x-show="player.has_moved" class="text-green-600">✓ Moved</span>
+                        <span x-show="!player.has_moved" class="text-orange-600">⏳ Waiting</span>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+
+    <!-- Investment Decision -->
+    <div x-show="gameStatus === 'active' && !hasMovedThisRound" class="bg-white rounded-xl card-shadow p-6 mb-6">
+        <h2 class="text-xl font-semibold mb-4">Make Your Decision</h2>
+        
+        <div class="mb-6">
+            <div class="text-center mb-4">
+                <div class="text-3xl font-bold text-blue-600 mb-2">5 Tokens</div>
+                <p class="text-gray-600">How many tokens would you like to invest?</p>
+            </div>
+            
+            <div class="max-w-md mx-auto">
+                <input 
+                    type="range" 
+                    min="0" 
+                    max="5" 
+                    x-model="tokensToInvest"
+                    class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                >
+                <div class="flex justify-between text-sm text-gray-500 mt-2">
+                    <span>0</span>
+                    <span>1</span>
+                    <span>2</span>
+                    <span>3</span>
+                    <span>4</span>
+                    <span>5</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-6 mb-6">
+            <div class="bg-blue-50 p-4 rounded-lg">
+                <h3 class="font-semibold text-blue-800 mb-2">Invest <span x-text="tokensToInvest"></span> tokens</h3>
+                <ul class="text-sm text-blue-700">
+                    <li>• Earn $<span x-text="(tokensToInvest * 0.10).toFixed(2)"></span> from your investment</li>
+                    <li>• Plus $0.10 for each token others invest</li>
+                    <li>• Others also benefit from your investment</li>
+                </ul>
+            </div>
+            
+            <div class="bg-green-50 p-4 rounded-lg">
+                <h3 class="font-semibold text-green-800 mb-2">Keep <span x-text="5 - tokensToInvest"></span> tokens</h3>
+                <ul class="text-sm text-green-700">
+                    <li>• Earn $<span x-text="((5 - tokensToInvest) * 0.20).toFixed(2)"></span> guaranteed</li>
+                    <li>• No benefit to others</li>
+                    <li>• Safe, predictable income</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="bg-gray-50 p-4 rounded-lg mb-6">
+            <h4 class="font-semibold mb-2">Your potential earnings this round:</h4>
+            <div class="text-lg">
+                $<span x-text="((5 - tokensToInvest) * 0.20 + tokensToInvest * 0.10).toFixed(2)"></span>
+                <span class="text-sm text-gray-600">+ $0.10 × (tokens invested by others)</span>
+            </div>
+        </div>
+
+        <button 
+            @click="makeMove()"
+            :disabled="isSubmitting"
+            class="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white font-semibold py-3 px-6 rounded-lg transition duration-300"
+        >
+            <span x-show="!isSubmitting">Submit Decision</span>
+            <span x-show="isSubmitting">Submitting...</span>
+        </button>
+    </div>
+
+    <!-- Waiting for Others -->
+    <div x-show="hasMovedThisRound && gameStatus === 'active'" class="bg-white rounded-xl card-shadow p-6 mb-6">
+        <div class="text-center">
+            <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8 text-blue-600 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+            </div>
+            <h2 class="text-xl font-semibold mb-2">Waiting for Other Players</h2>
+            <p class="text-gray-600">You invested <span x-text="tokensToInvest"></span> tokens. Waiting for others to make their decisions...</p>
+        </div>
+    </div>
+
+    <!-- Round Results -->
+    <div x-show="roundResults.length > 0" class="bg-white rounded-xl card-shadow p-6 mb-6">
+        <h2 class="text-xl font-semibold mb-4">Round Results</h2>
+        
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="border-b">
+                        <th class="text-left py-2">Round</th>
+                        <th class="text-left py-2">You Invested</th>
+                        <th class="text-left py-2">Group Total</th>
+                        <th class="text-left py-2">Your Earnings</th>
+                        <th class="text-left py-2">Total Earnings</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <template x-for="result in roundResults.slice().reverse()" :key="result.round">
+                        <tr class="border-b">
+                            <td class="py-2" x-text="result.round"></td>
+                            <td class="py-2" x-text="result.invested"></td>
+                            <td class="py-2" x-text="result.total_invested"></td>
+                            <td class="py-2">$<span x-text="result.earnings.toFixed(2)"></span></td>
+                            <td class="py-2">$<span x-text="result.cumulative_earnings.toFixed(2)"></span></td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Game Complete -->
+    <div x-show="gameStatus === 'completed'" class="bg-white rounded-xl card-shadow p-6">
+        <div class="text-center">
+            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </div>
+            <h2 class="text-2xl font-bold mb-4">Game Complete!</h2>
+            <p class="text-gray-600 mb-6">Thank you for participating in the Public Goods Game.</p>
+            
+            <div class="grid md:grid-cols-2 gap-6 mb-6">
+                <div class="bg-green-50 p-4 rounded-lg">
+                    <h3 class="font-semibold text-green-800 mb-2">Your Final Results</h3>
+                    <div class="text-2xl font-bold text-green-600">
+                        $<span x-text="finalEarnings.toFixed(2)"></span>
+                    </div>
+                    <div class="text-sm text-green-700">Total earnings</div>
+                </div>
+                
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <h3 class="font-semibold text-blue-800 mb-2">Group Performance</h3>
+                    <div class="text-lg font-bold text-blue-600">
+                        <span x-text="averageCooperation.toFixed(1)"></span>%
+                    </div>
+                    <div class="text-sm text-blue-700">Average cooperation rate</div>
+                </div>
+            </div>
+            
+            <div class="flex gap-4 justify-center">
+                <a href="/games" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg transition duration-300">
+                    Play Again
+                </a>
+                <a href="/admin" class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-6 rounded-lg transition duration-300">
+                    View Results
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function gameInterface() {
+    return {
+        gameId: '{{ game.id }}',
+        playerId: localStorage.getItem('playerId'),
+        gameStatus: 'waiting',
+        currentRound: 1,
+        maxRounds: 15,
+        tokensToInvest: 0,
+        hasMovedThisRound: false,
+        isSubmitting: false,
+        players: [],
+        roundResults: [],
+        finalEarnings: 0,
+        averageCooperation: 0,
+        socket: null,
+        
+        init() {
+            this.initializeSocket();
+            this.loadGameStatus();
+            // Poll for updates every 2 seconds
+            setInterval(() => this.loadGameStatus(), 2000);
+        },
+        
+        initializeSocket() {
+            this.socket = io();
+            
+            this.socket.on('connect', () => {
+                this.socket.emit('join_game_room', { game_id: this.gameId });
+            });
+            
+            this.socket.on('game_state_update', (data) => {
+                this.handleGameUpdate(data);
+            });
+        },
+        
+        async loadGameStatus() {
+            try {
+                const response = await fetch(`/api/games/${this.gameId}/status`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    this.gameStatus = data.status;
+                    this.currentRound = data.current_round + 1; // API uses 0-based
+                    this.players = data.players || [];
+                    
+                    // Check if current player has moved this round
+                    this.checkPlayerMoveStatus();
+                }
+            } catch (error) {
+                console.error('Error loading game status:', error);
+            }
+        },
+        
+        async makeMove() {
+            if (this.isSubmitting) return;
+            
+            this.isSubmitting = true;
+            
+            try {
+                const response = await fetch(`/api/games/${this.gameId}/move`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        player_id: this.playerId,
+                        move: this.tokensToInvest
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    this.hasMovedThisRound = true;
+                    
+                    if (data.status === 'round_complete') {
+                        // Round completed, load results
+                        setTimeout(() => this.loadRoundResults(), 1000);
+                    } else if (data.status === 'game_complete') {
+                        // Game completed
+                        this.gameStatus = 'completed';
+                        this.loadFinalResults();
+                    }
+                    
+                    // Notify other players
+                    this.socket.emit('game_update', {
+                        game_id: this.gameId,
+                        type: 'player_moved',
+                        player_id: this.playerId
+                    });
+                } else {
+                    alert(data.error || 'Failed to submit move');
+                }
+            } catch (error) {
+                console.error('Error making move:', error);
+                alert('Failed to submit move');
+            }
+            
+            this.isSubmitting = false;
+        },
+        
+        checkPlayerMoveStatus() {
+            // This would check if the current player has already moved this round
+            // Implementation depends on API structure
+        },
+        
+        loadRoundResults() {
+            // Load results for the completed round
+            // Implementation depends on API structure
+        },
+        
+        loadFinalResults() {
+            // Load final game statistics
+            // Implementation depends on API structure
+        },
+        
+        handleGameUpdate(data) {
+            // Handle real-time updates from WebSocket
+            if (data.type === 'player_moved') {
+                this.loadGameStatus();
+            } else if (data.type === 'round_complete') {
+                this.loadRoundResults();
+            } else if (data.type === 'game_complete') {
+                this.gameStatus = 'completed';
+                this.loadFinalResults();
+            }
+        }
+    }
+}
+</script>
+{% endblock %}
